@@ -6,7 +6,7 @@ from matplotlib.figure import Figure
 
 import numpy as np
 import pandas as pd
-import pt as pt
+import plottingtools as pt
 pt.darkmode()
 
 import shutil
@@ -235,7 +235,7 @@ def make_strain_plot(data: pd.DataFrame) -> str:
     pt.ticklabelsize(ax)
     pt.legend(ax)
     pt.labels(ax, "Calendar Week", "Fraction")
-    pt.limits(ax, None, (0, 100))
+    pt.limits(ax, None, (0, 100.3))
     fig.set_figheight(10)
     fig.set_figwidth(15)
     
@@ -262,12 +262,15 @@ def main():
     strain_plot = make_strain_plot(strain_data)
     
     
-    return f'''<h1>Yet another Covid Dashboard!</h1>
+    return f'''<html><head><link rel="stylesheet" href="/static/style.css"></head><body>
+    <h1>Yet another Covid Dashboard!</h1>
+    <h2>Cases (data polled from RKI github and RKI website)</h2>
     <img width=500px, src='data:image/png;base64,{case_plot}'/>
     <img width=500px, src='data:image/png;base64,{strain_plot}'/>
-    <br><br>
+    <h2>Vaccinations (data polled from Impfdashboard)</h2>
     <img width=500px, src='data:image/png;base64,{vacplot_daily}'/>
     <img width=500px, src='data:image/png;base64,{vacplot_cumul}'/>
-    <br><br>
+    <h2>Intensive Care Beds (data polled from DIVI website)</h2>
     <img width=500px, src='data:image/png;base64,{bed_plot}'/>
+    </body></html>
     '''
