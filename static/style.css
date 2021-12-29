@@ -1,0 +1,103 @@
+
+p {
+    font-family: "Helvetica", "Arial", sans-serif;
+    /*border:1px solid red*/
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: "Helvetica", "Arial", sans-serif;
+    font-weight: normal;
+}
+
+body {
+    margin-right: 25%;
+	margin-left: 25%;
+    text-align: justify;
+    color: #cacaca;
+    background-color: #202b38;
+}
+
+a {
+    color: #41adff;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+a:visited {
+    color: #41adff;
+}
+
+
+
+
+header {
+    margin-bottom: 2em;    
+}
+
+header h1 {
+    margin-top: 0;
+    margin-bottom: -1em;
+    
+}
+
+header ul {
+    list-style: none;
+    padding-left: 0;    
+}
+
+header li:first-of-type {
+    display: inline;
+    float: left;
+    padding-right: 5px;
+    padding-left: 0px;
+    border-right: 1px solid darkgrey;
+}
+
+header li {
+    display: inline;
+    float: left;
+    padding-right: 5px;
+    padding-left: 5px;
+    border-right: 1px solid;
+    border-image: linear-gradient(to bottom, rgba(0,0,0,0) 25%, rgba(150,150,150,1) 25%, rgba(150,150,150,1) 75%, rgba(0,0,0,0) 75%);
+    border-image-slice: 1;
+}
+
+header li:last-of-type {
+    display: inline;
+    float: left;
+    padding-right: 0px;
+    padding-left: 5px;
+    border-right: 0;
+}
+
+header li .current {
+    text-decoration: underline;
+}
+
+header hr {
+    clear: left
+}
+
+main {
+    clear: left;
+}
+
+body code {
+    font-family: monospace;
+    color: DeepSkyBlue;
+    text-align: left;
+}
+
+body li {
+        font-family: "Helvetica", "Arial", sans-serif;
+
+}
+
+body ul {
+    list-style-type: circle;
+    list-style-position: inside;
+}
