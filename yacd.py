@@ -10,50 +10,34 @@ import plottingtools as pt
 
 pt.darkmode()
 
-import shutil
-import requests
+import fsspec
 
 app = Flask(__name__)
 
 
-def get_strain_data():
-    # Grab data. Using a stream because direct download with pandas yields 403 Forbidden
-    url = "https://www.rki.de/DE/Content/InfAZ/N/Neuartiges_Coronavirus/Daten/VOC_VOI_Tabelle.xlsx?__blob=publicationFile"
-    response = requests.get(url, stream=True)
-    with open('data.xlsx', 'wb') as out_file:
-        shutil.copyfileobj(response.raw, out_file)
-    del response
+def get_strain_data(url: str = "https://www.rki.de/DE/Content/InfAZ/N/Neuartiges_Coronavirus/Daten/VOC_VOI_Tabelle.xlsx?__blob=publicationFile"):
+    STRAIN_MAPPING = {
+    "B.1.1.7": "Alpha",
+    "B.1.351": "Beta",
+    "AY.1": "Delta",
+    "P.1": "Gamma",
+    "B.1.1.529": "Omicron",
+    }
 
-    # Read into pandas
-    data = pd.read_excel("data.xlsx", sheet_name="VOC")
+    # Grab data
+    with fsspec.open(url) as fp:
+        data = pd.read_excel(fp, sheet_name="VOC")
 
     # Only keep single calendar week entries. Use as index
-    data = data[[len(x) == 4 for x in data.KW]]
-    data.KW = [int(x[2:]) for x in data.KW]
-    data.index = data.KW
+    data = data[data.KW.str.len() == 4]
+    data.set_index(data.KW.str[-2:].astype(int), inplace=True)
 
     # Only keep columns with strain fractions
-    data = data.loc[:, ["Anteil" in x for x in data.columns]]
-    data = data.loc[:, [not "Gesamt" in x for x in data.columns]]
+    data = data.drop(columns = [c for c in data.columns if "Anteil" not in c or "Gesamt" in c])
 
     # Change colnames to Greek names
-    colnames = data.columns
-    colnames_new = []
-    for c in colnames:
-        if "B.1.1.7" in c:
-            colnames_new.append("Alpha")
-        elif "B.1.351" in c:
-            colnames_new.append("Beta")
-        elif "AY.1" in c:
-            colnames_new.append("Delta")
-        elif "P.1" in c:
-            colnames_new.append("Gamma")
-        elif "B.1.1.529" in c:
-            colnames_new.append("Omikron")
-        else:
-            colnames_new.append("Other")
-    data.columns = colnames_new
-
+    data.columns = data.columns.to_series().str.split("+").str[0].map(STRAIN_MAPPING.get)
+    
     return data
 
 
@@ -115,6 +99,13 @@ def get_bed_data(url: str = "") -> pd.DataFrame:
     data["betten_sum"] = data["betten_frei"] + data["betten_belegt"]
 
     return data
+
+
+def get_all_data():
+    # TODO: Caching!
+
+    return get_case_data(), get_strain_data(), get_vaccination_data(
+    ), get_bed_data()
 
 
 def make_vac_plot_cumul(data: pd.DataFrame) -> str:
@@ -270,19 +261,18 @@ def make_strain_plot(data: pd.DataFrame) -> str:
     # Convert to ASCII Base64
     return base64.b64encode(buf.getbuffer()).decode("ascii")
 
+
 def assemble_dashboard() -> str:
-    vac_data = get_vaccination_data()
+    case_data, strain_data, vac_data, bed_data = get_all_data()
+
+    case_plot = make_case_plot(case_data)
+
+    strain_plot = make_strain_plot(strain_data)
+
     vacplot_cumul = make_vac_plot_cumul(vac_data)
     vacplot_daily = make_vac_plot_daily(vac_data)
 
-    case_data = get_case_data()
-    case_plot = make_case_plot(case_data)
-
-    bed_data = get_bed_data()
     bed_plot = make_bed_plot(bed_data)
-
-    strain_data = get_strain_data()
-    strain_plot = make_strain_plot(strain_data)
 
     return f'''<html><head><link rel="stylesheet" href="/static/style.css"></head><body>
     <h1>Yet another Covid Dashboard!</h1>
@@ -296,9 +286,8 @@ def assemble_dashboard() -> str:
     <img width=500px, src='data:image/png;base64,{bed_plot}'/>
     </body></html>
     '''
-    
+
 
 @app.route("/")
 def main():
     return assemble_dashboard()
-
