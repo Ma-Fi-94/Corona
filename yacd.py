@@ -270,9 +270,7 @@ def make_strain_plot(data: pd.DataFrame) -> str:
     # Convert to ASCII Base64
     return base64.b64encode(buf.getbuffer()).decode("ascii")
 
-
-@app.route("/")
-def main():
+def assemble_dashboard() -> str:
     vac_data = get_vaccination_data()
     vacplot_cumul = make_vac_plot_cumul(vac_data)
     vacplot_daily = make_vac_plot_daily(vac_data)
@@ -298,3 +296,9 @@ def main():
     <img width=500px, src='data:image/png;base64,{bed_plot}'/>
     </body></html>
     '''
+    
+
+@app.route("/")
+def main():
+    return assemble_dashboard()
+
