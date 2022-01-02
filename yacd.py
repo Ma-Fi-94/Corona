@@ -1,5 +1,6 @@
 import base64
 from io import BytesIO
+import fsspec
 
 from flask import Flask
 from matplotlib.figure import Figure
@@ -10,18 +11,21 @@ import plottingtools as pt
 
 pt.darkmode()
 
-import fsspec
+from cachetools import cached, TTLCache
 
 app = Flask(__name__)
 
 
-def get_strain_data(url: str = "https://www.rki.de/DE/Content/InfAZ/N/Neuartiges_Coronavirus/Daten/VOC_VOI_Tabelle.xlsx?__blob=publicationFile"):
+def get_strain_data(
+    url:
+    str = "https://www.rki.de/DE/Content/InfAZ/N/Neuartiges_Coronavirus/Daten/VOC_VOI_Tabelle.xlsx?__blob=publicationFile"
+):
     STRAIN_MAPPING = {
-    "B.1.1.7": "Alpha",
-    "B.1.351": "Beta",
-    "AY.1": "Delta",
-    "P.1": "Gamma",
-    "B.1.1.529": "Omicron",
+        "B.1.1.7": "Alpha",
+        "B.1.351": "Beta",
+        "AY.1": "Delta",
+        "P.1": "Gamma",
+        "B.1.1.529": "Omicron",
     }
 
     # Grab data
@@ -33,11 +37,14 @@ def get_strain_data(url: str = "https://www.rki.de/DE/Content/InfAZ/N/Neuartiges
     data.set_index(data.KW.str[-2:].astype(int), inplace=True)
 
     # Only keep columns with strain fractions
-    data = data.drop(columns = [c for c in data.columns if "Anteil" not in c or "Gesamt" in c])
+    data = data.drop(columns=[
+        c for c in data.columns if "Anteil" not in c or "Gesamt" in c
+    ])
 
     # Change colnames to Greek names
-    data.columns = data.columns.to_series().str.split("+").str[0].map(STRAIN_MAPPING.get)
-    
+    data.columns = data.columns.to_series().str.split("+").str[0].map(
+        STRAIN_MAPPING.get)
+
     return data
 
 
@@ -101,9 +108,8 @@ def get_bed_data(url: str = "") -> pd.DataFrame:
     return data
 
 
+@cached(cache=TTLCache(maxsize=1, ttl=30 * 60))
 def get_all_data():
-    # TODO: Caching!
-
     return get_case_data(), get_strain_data(), get_vaccination_data(
     ), get_bed_data()
 
