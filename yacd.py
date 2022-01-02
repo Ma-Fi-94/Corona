@@ -13,6 +13,8 @@ pt.darkmode()
 
 from cachetools import cached, TTLCache
 
+import time
+
 app = Flask(__name__)
 
 
@@ -108,7 +110,6 @@ def get_bed_data(url: str = "") -> pd.DataFrame:
     return data
 
 
-@cached(cache=TTLCache(maxsize=1, ttl=30 * 60))
 def get_all_data():
     return get_case_data(), get_strain_data(), get_vaccination_data(
     ), get_bed_data()
@@ -268,16 +269,14 @@ def make_strain_plot(data: pd.DataFrame) -> str:
     return base64.b64encode(buf.getbuffer()).decode("ascii")
 
 
+@cached(cache=TTLCache(maxsize=1, ttl=30 * 60))
 def assemble_dashboard() -> str:
     case_data, strain_data, vac_data, bed_data = get_all_data()
 
     case_plot = make_case_plot(case_data)
-
     strain_plot = make_strain_plot(strain_data)
-
     vacplot_cumul = make_vac_plot_cumul(vac_data)
     vacplot_daily = make_vac_plot_daily(vac_data)
-
     bed_plot = make_bed_plot(bed_data)
 
     return f'''<html><head><link rel="stylesheet" href="/static/style.css"></head><body>
@@ -296,4 +295,8 @@ def assemble_dashboard() -> str:
 
 @app.route("/")
 def main():
-    return assemble_dashboard()
+    start_time = time.time()
+    dashboard = assemble_dashboard()
+    dt = time.time() - start_time
+    print(dt)
+    return dashboard
