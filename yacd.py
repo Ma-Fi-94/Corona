@@ -13,8 +13,6 @@ pt.darkmode()
 
 from cachetools import cached, TTLCache
 
-import time
-
 app = Flask(__name__)
 
 
@@ -295,8 +293,5 @@ def assemble_dashboard() -> str:
 
 @app.route("/")
 def main():
-    start_time = time.time()
     dashboard = assemble_dashboard()
-    dt = time.time() - start_time
-    print(dt)
     return dashboard
