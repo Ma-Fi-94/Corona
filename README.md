@@ -1,6 +1,8 @@
 # YACD (Yet Another Covid Dashboard)
 My first attempt at a web app using flask. Shows plots of Covid case numbers, vaccination numbers and intensive care beds over time for Germany.
 
+Check it out here: https://covid-dashboard-mmf.herokuapp.com/
+
 ![](https://github.com/Ma-Fi-94/YACD/blob/main/screen.png)
 
 ## How it works
