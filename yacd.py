@@ -33,7 +33,7 @@ def get_strain_data(
         data = pd.read_excel(fp, sheet_name="VOC")
 
     # Only keep single calendar week entries. Use as index
-    data = data[data.KW.str.len() == 4]
+    data = data[data.KW.str.len() == 9]
     data.set_index(data.KW.str[-2:].astype(int), inplace=True)
 
     # Only keep columns with strain fractions
@@ -46,6 +46,7 @@ def get_strain_data(
         STRAIN_MAPPING.get)
 
     return data
+
 
 
 def get_vaccination_data(
