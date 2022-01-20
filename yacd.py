@@ -32,9 +32,18 @@ def get_strain_data(
     with fsspec.open(url) as fp:
         data = pd.read_excel(fp, sheet_name="VOC")
 
-    # Only keep single calendar week entries. Use as index
+    # Only keep single calendar week entries
     data = data[data.KW.str.len() == 9]
-    data.set_index(data.KW.str[-2:].astype(int), inplace=True)
+    
+    # Split year and calendar week
+    data["year"] = [int(k.split("-")[0]) for k in data.KW]
+    data["week"] = [int(k.split("-")[1][2:]) for k in data.KW]
+    
+    # Calculate calendar weeks since beginning of 2021
+    data["KW"] = [w if y==2021 else 52+w for y,w in zip(data.year, data.week)]
+    
+    # Set as index
+    data.set_index(data.KW, inplace=True)
 
     # Only keep columns with strain fractions
     data = data.drop(columns=[
@@ -42,10 +51,10 @@ def get_strain_data(
     ])
 
     # Change colnames to Greek names
-    data.columns = data.columns.to_series().str.split("+").str[0].map(
-        STRAIN_MAPPING.get)
+    data.columns = data.columns.to_series().str.split("+").str[0].map(STRAIN_MAPPING.get)
 
     return data
+
 
 
 
@@ -255,7 +264,7 @@ def make_strain_plot(data: pd.DataFrame) -> str:
     pt.despine(ax)
     pt.ticklabelsize(ax)
     pt.legend(ax)
-    pt.labels(ax, "Calendar Week", "Fraction")
+    pt.labels(ax, "Calendar Week since 2021", "Fraction")
     pt.limits(ax, None, (0, 100.3))
     fig.set_figheight(10)
     fig.set_figwidth(15)
